@@ -27,3 +27,8 @@ export const deleteReminder = (id) =>
 export const getTimetable = () => request("/api/complaints/timetable");
 
 export const getCampusEvents = () => request("/api/complaints/events");
+
+export const saveChatHistory = (entry) =>
+  request("/api/complaints/history", { method: "POST", body: JSON.stringify(entry) });
+export const getChatHistory = (limit) =>
+  request(`/api/complaints/history${limit ? `?limit=${limit}` : ""}`);
