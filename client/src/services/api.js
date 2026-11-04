@@ -1,9 +1,21 @@
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "" : "https://campuscare-c54l.onrender.com")
+).replace(/\/$/, "");
+
 const request = async (path, options = {}) => {
   let response;
   try {
-    response = await fetch(path, { headers: { "Content-Type": "application/json" }, ...options });
-  } catch {
-    throw new Error("Cannot connect to the API. Start the project with `npm run dev` from the project root, then try again.");
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+  } catch (error) {
+    throw new Error(
+      error instanceof TypeError
+        ? "Cannot connect to the CampusCare backend."
+        : error.message
+    );
   }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.message || "Something went wrong.");
