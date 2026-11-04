@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Mic, LayoutDashboard, Calendar, Sparkles, Menu, X } from "lucide-react";
+import { Mic, LayoutDashboard, Calendar, Sparkles, History as HistoryIcon, Menu, X } from "lucide-react";
 
 const NAV = [
   { to: "/",          icon: <Mic size={14} />,              label: "Voice Assistant" },
   { to: "/timetable", icon: <Calendar size={14} />,         label: "My Timetable" },
   { to: "/events",    icon: <Sparkles size={14} />,         label: "Campus Events" },
   { to: "/dashboard", icon: <LayoutDashboard size={14} />,  label: "My Complaints" },
+  { to: "/history",   icon: <HistoryIcon size={14} />,       label: "History" },
 ];
 
 export default function Layout({ children }) {
