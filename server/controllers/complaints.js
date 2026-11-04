@@ -219,6 +219,28 @@ async function callGemini(prompt, model, retries = 3) {
   }
 }
 
+function parseReminderDate(value) {
+  if (!value) return new Date();
+  if (value instanceof Date) return value;
+  if (typeof value !== "string") return null;
+
+  const input = value.trim();
+  const timeOnly = input.match(/^(\d{1,2}):(\d{2})$/);
+  if (timeOnly) {
+    const hours = Number(timeOnly[1]);
+    const minutes = Number(timeOnly[2]);
+    if (hours > 23 || minutes > 59) return null;
+
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    if (date <= new Date()) date.setDate(date.getDate() + 1);
+    return date;
+  }
+
+  const parsed = new Date(input);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 async function understandComplaint(input) {
   if (!process.env.GEMINI_API_KEY) {
     return normalizeAI({ title: "Campus complaint", description: input, category: "Other", priority: "Medium", summary: input }, input);
@@ -338,11 +360,18 @@ export async function createReminder(req, res) {
   if (!text || typeof text !== "string") {
     return res.status(400).json({ message: "Reminder text is required." });
   }
-  
+
+  const reminderDate = parseReminderDate(datetime);
+  if (!reminderDate) {
+    return res.status(400).json({
+      message: "Reminder date and time must be a valid ISO date or HH:MM time.",
+    });
+  }
+
   try {
     const reminder = await Reminder.create({
       text: text.trim().slice(0, 200),
-      datetime: datetime || new Date(),
+      datetime: reminderDate,
       completed: false
     });
     
