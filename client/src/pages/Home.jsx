@@ -6,7 +6,7 @@ import {
   Zap as BoltIcon, Droplets, Building2, Wifi, BookOpen, Wrench,
   MessageSquare, Calendar, Bell, TrendingUp, Clock,
 } from "lucide-react";
-import { createComplaint, classifyIntent, createReminder, getTimetable, getCampusEvents, getReminders } from "../services/api";
+import { createComplaint, classifyIntent, createReminder, getTimetable, getCampusEvents, getReminders, getChatHistory, saveChatHistory } from "../services/api";
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -95,7 +95,18 @@ export default function Home() {
 
   useEffect(() => {
     checkActiveReminders();
+    loadRecentHistory();
   }, []);
+
+  const loadRecentHistory = async () => {
+    try {
+      const clearedAt = Number(localStorage.getItem("campuscare-recent-chat-cleared-at") || 0);
+      const entries = await getChatHistory(10);
+      setHistory(entries.filter((entry) => new Date(entry.timestamp).getTime() > clearedAt));
+    } catch (err) {
+      console.error("Failed to load chat history:", err);
+    }
+  };
 
   const checkActiveReminders = async () => {
     try {
@@ -357,7 +368,12 @@ export default function Home() {
         timestamp: new Date().toISOString(),
       };
       
-      setHistory((prev) => [newEntry, ...prev]);
+      const savedEntry = await saveChatHistory({
+        query: newEntry.query,
+        classification: newEntry.classification,
+        execution: newEntry.execution,
+      });
+      setHistory((prev) => [savedEntry.entry, ...prev].slice(0, 10));
       setResult({
         classification,
         execution: executionResult,
@@ -540,7 +556,10 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-cc-text">Chat History</h2>
             <button
-              onClick={() => setHistory([])}
+              onClick={() => {
+                localStorage.setItem("campuscare-recent-chat-cleared-at", String(Date.now()));
+                setHistory([]);
+              }}
               className="text-xs text-cc-muted hover:text-red-600"
             >
               Clear All
